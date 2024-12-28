@@ -1,0 +1,591 @@
+---
+title: "US Nation-wide Mental Health Facilities Analysis"
+author:
+  - Abby Wang & Alice Cui
+  - GH 562
+date: "`r Sys.Date()`"
+format: 
+  revealjs:
+    multiplex: true
+    theme: ["pp.scss"]
+    slide-number: c/t
+    incremental: true
+    title-slide-attributes:
+      data-background-image: img/background.jpeg
+      data-background-size: cover  
+editor: visual
+---
+
+{r preparation}
+#| include: false
+library(ggplot2) 
+library(usmap) 
+library(magrittr)
+library(readr)
+library(tidyverse)
+library(tidytuesdayR)
+library(feb2)
+library(dplyr)
+library(shiny)
+library("sf")
+library(leaflet)
+states <- geojsonio::geojson_read("https://rstudio.github.io/leaflet/json/us-states.geojson", what = "sp")
+remotes::install_github("rstudio/leaflet")
+nmhss2020 <- read.csv("data/nmhss2020.csv") 
+mhcld2020 <- read.csv("data/mhcld_puf_2020.csv")
+
+raw_facilities <- read.csv("data/nmhss2020.csv") %>%
+  mutate(facility_type = case_when(
+    FACILITYTYPE == 1 ~ "Psychiatric hospital",
+    FACILITYTYPE == 2 ~ "Separate inpatient psychiatric unit of a general hospital", 
+    FACILITYTYPE == 3 ~ "Residential trestment center for children", 
+    FACILITYTYPE == 4 ~ "Residential treatment center for adults",
+    FACILITYTYPE == 5 ~ "Other types of residential treatment facility", 
+    FACILITYTYPE == 6 ~ "Veterans Administration Medical Center (VAMC)", 
+    FACILITYTYPE == 7 ~ "Community Mental Health Center (CMHC)", 
+    FACILITYTYPE == 8 ~ "Certified Community Behavioral Health Clinic (CCBHC)",
+    FACILITYTYPE == 9 ~ "Partial hospitalization/day treatment facility", 
+    FACILITYTYPE == 10 ~ "Outpatient mental health facility", 
+    FACILITYTYPE == 11 ~ "Multi-setting mental health facility", 
+    FACILITYTYPE == 12 ~ "Other")
+) %>%
+  mutate(facility_type = factor(facility_type))
+
+
+  state_treatment_1 <- raw_facilities %>%
+  group_by(LST) %>%
+  filter(TREATPSYCHOTHRPY == 1) %>%
+  count()%>%
+  rename(psychotherapy = n)
+
+  state_treatment_2 <- raw_facilities %>%
+  group_by(LST) %>%
+  filter(TREATFAMTHRPY == 1) %>%
+  count()%>%
+  rename("couples/family therapy" = n)
+
+  state_treatment_3 <- raw_facilities %>%
+  group_by(LST) %>%
+  filter(TREATGRPTHRPY == 1) %>%
+  count()%>%
+  rename("group therapy" = n)
+
+  state_treatment_4 <- raw_facilities %>%
+  group_by(LST) %>%
+  filter(TREATCOGTHRPY == 1) %>%
+  count()%>%
+  rename("cognitive behavioral therapy" = n)
+
+  state_treatment_5 <- raw_facilities %>%
+  group_by(LST) %>%
+  filter(TREATDIALTHRPY == 1) %>%
+  count()%>%
+  rename("dialectical behavior therapy" = n)
+
+  state_treatment_6 <- raw_facilities %>%
+  group_by(LST) %>%
+  filter(TREATBEHAVMOD == 1) %>%
+  count()%>%
+  rename("behavior modification" = n)
+
+  state_treatment_7 <- raw_facilities %>%
+  group_by(LST) %>%
+  filter(TREATDUALMHSA == 1) %>%
+  count()%>%
+  rename("dual disorders treatment" = n)
+
+  state_treatment_8 <- raw_facilities %>%
+  group_by(LST) %>%
+  filter(TREATTRAUMATHRPY == 1) %>%
+  count()%>%
+  rename("trauma therapy" = n)
+
+  state_treatment_9 <- raw_facilities %>%
+  group_by(LST) %>%
+  filter(TREATACTVTYTHRPY == 1) %>%
+  count()%>%
+  rename("activity therapy" = n)
+
+  state_treatment_10 <- raw_facilities %>%
+  group_by(LST) %>%
+  filter(TREATELECTRO == 1) %>%
+  count()%>%
+  rename("electroconvulsive therapy" = n)
+
+  state_treatment_11 <- raw_facilities %>%
+  group_by(LST) %>%
+  filter(TREATTMS == 1) %>%
+  count()%>%
+  rename("Transcranial Magnetic Stimulation (TMS)" = n)
+
+  state_treatment_12 <- raw_facilities %>%
+  group_by(LST) %>%
+  filter(TREATKIT == 1) %>%
+  count()%>%
+  rename("Ketamine Infusion Therapy (KIT)" = n)
+
+  state_treatment_13 <- raw_facilities %>%
+  group_by(LST) %>%
+  filter(TREATEMDR == 1) %>%
+  count()%>%
+  rename("Eye Movement Desensitization and Reprocessing (EMDR)" = n)
+
+  state_treatment_14 <- raw_facilities %>%
+  group_by(LST) %>%
+  filter(TREATTELEMEDINCE == 1) %>%
+  count()%>%
+  rename("telemedicine/telehealth therapy" = n)
+
+  state_treatment_15 <- raw_facilities %>%
+  group_by(LST) %>%
+  filter(TREATOTH == 1) %>%
+  count()%>%
+  rename("other mental health treatment approach" = n)
+
+  state_treatment_16 <- raw_facilities %>%
+  group_by(LST) %>%
+  filter(NOTREAT == 1) %>%
+  count()%>%
+  rename("none of the identified mental health treatment approach" = n)
+
+  state_treatment_17 <- raw_facilities %>%
+  group_by(LST) %>%
+  filter(TREATCOGREM == 1) %>%
+  count()%>%
+  rename("cognitive remediation therapy" = n)
+  
+state_treatment <- full_join(state_treatment_1, state_treatment_2, by = "LST") %>%
+  full_join(state_treatment_3, by = "LST") %>%
+  full_join(state_treatment_4, by = "LST") %>%
+  full_join(state_treatment_5, by = "LST") %>%
+  full_join(state_treatment_17, by = "LST") %>%
+  full_join(state_treatment_6, by = "LST") %>%
+  full_join(state_treatment_7, by = "LST") %>%
+  full_join(state_treatment_8, by = "LST") %>%
+  full_join(state_treatment_9, by = "LST") %>%
+  full_join(state_treatment_10, by = "LST") %>%
+  full_join(state_treatment_11, by = "LST") %>%
+  full_join(state_treatment_12, by = "LST") %>%
+  full_join(state_treatment_13, by = "LST") %>%
+  full_join(state_treatment_14, by = "LST") %>%
+  full_join(state_treatment_15, by = "LST") %>%
+  full_join(state_treatment_16, by = "LST") 
+
+long_treatment <- state_treatment %>% 
+  pivot_longer(
+    cols = !LST, 
+    names_to = "treatments", 
+    values_to = "n",
+    values_drop_na = TRUE
+  )
+
+
+
+state_codes <- c("1" = "AK", "2" = "AL", "4" = "AZ", "5" = "AR", "6" = "CA", "8" = "CO", "9" = "CT", "10" = "DE", "11" = "DC", "12" = "FL", "13" = "GA", "15" = "HI", "16" = "ID", "17" = "IL", "18" = "IN", "19" = "IA", "20" = "KS", "21" = "KY", "22" = "LA", "25" = "MA", "26" = "MI", "27" = "MN", "28" = "MS", "29" = "MO", "30" = "MT", "31" = "NE", "32" = "NV", "34" = "NJ", "35" = "NM", "36" = "NY", "37" = "NC", "38" = "ND", "39" = "OH", "40" = "OK", "41" = "OR", "42" = "PA", "44" = "RI", "45" = "SC", "46" = "SD", "47" = "TN", "48" = "TX", "49" = "UT", "50" = "VT", "51" = "VA", "53" = "WA", "55" = "WI", "56" = "WY", "72" = "PR", "99" = "ZZ")
+
+mhcld2020$STATEFIP <- factor(mhcld2020$STATEFIP, levels = names(state_codes), labels = state_codes)
+
+mhcld2020_new <- mhcld2020%>%
+  mutate(illness_type = case_when(
+    MH1 == 1 ~ "Trauma- and stressor-related disorders",
+    MH1 == 2 ~ "Anxiety disorders", 
+    MH1 == 3 ~ "Attention deficit/hyperactivity disorder (ADHD)", 
+    MH1 == 4 ~ "Conduct disorders",
+    MH1 == 5 ~ "Delirium, dementia", 
+    MH1 == 6 ~ "Bipolar disorders", 
+    MH1 == 7 ~ "Depressive disorders", 
+    MH1 == 8 ~ "Oppositional defiant disorders",
+    MH1 == 9 ~ "Pervasive developmental disorders", 
+    MH1 == 10 ~ "Personality disorders", 
+    MH1 == 11 ~ "Schizophrenia or other psychotic disorders", 
+    MH1 == 12 ~ "Alcohol or substance use disorders", 
+    MH1 == 13 ~ "Other disorders/conditions", 
+    MH1 == -9 ~ "Missing/unknown/not collected/invalid/no or deferred diagnosis")
+) %>%
+  mutate(illness_type = factor(illness_type))
+
+mhcld2020_new <- mhcld2020_new %>%
+  rename(LST = STATEFIP)
+
+long_illness <- mhcld2020_new %>%
+  group_by(LST, illness_type) %>%
+  summarize(n = n())
+
+state_names <- c("AK" = "Alaska", "AL" = "Alabama", "AR" = "Arkansas", "AZ" = "Arizona", "CA" = "California", "CO" = "Colorado", "CT" = "Connecticut", "DC" = "District of Columbia", "DE" = "Delaware", "FL" = "Florida", "GA" = "Georgia", "HI" = "Hawaii", "IA" = "Iowa", "ID" = "Idaho", "IL" = "Illinois", "IN" = "Indiana", "KS" = "Kansas", "KY" = "Kentucky", "LA" = "Louisiana", "MA" = "Massachusetts", "MD" = "Maryland", "ME" = "Maine", "MI" = "Michigan", "MN" = "Minnesota", "MO" = "Missouri", "MS" = "Mississippi", "MT" = "Montana", "NC" = "North Carolina", "ND" = "North Dakota", "NE" = "Nebraska", "NH" = "New Hampshire", "NJ" = "New Jersey", "NM" = "New Mexico", "NV" = "Nevada", "NY" = "New York", "OH" = "Ohio", "OK" = "Oklahoma", "OR" = "Oregon", "PA" = "Pennsylvania", "PR" = "Puerto Rico", "RI" = "Rhode Island", "SC" = "South Carolina", "SD" = "South Dakota", "TN" = "Tennessee", "TX" = "Texas", "UT" = "Utah", "VA" = "Virginia", "VT" = "Vermont", "WA" = "Washington", "WI" = "Wisconsin", "WV" = "West Virginia", "WY" = "Wyoming", "ZZ"= "Other jurisdictions")
+
+
+Background: Current Situation in US
+
+More than 1 in 5 US adults live with a mental illness.
+
+Over 1 in 5 youth have had a seriously debilitating mental illness.
+
+1 in 25 U.S. adults lives with a serious mental illness.
+
+Among those age 18 and older with serious mental illness in 2020, almost half reported that they did not receive treatment when they needed it at least once over the previous year.
+
+Background: Facility Burdern Overview
+
+Half of the total states have a ratio of over 500 clients with mental health diagnoses per facility.
+
+Disparities in client burden across states.
+
+{r, fig.width=8, fig.height=6}
+#| echo: false
+nmhss2020 <- read.csv("data/nmhss2020.csv") 
+mhcld2020 <- read.csv("data/mhcld_puf_2020.csv")
+
+state_codes <- c("1" = "AK", "2" = "AL", "4" = "AZ", "5" = "AR", "6" = "CA", "8" = "CO", "9" = "CT", "10" = "DE", "11" = "DC", "12" = "FL", "13" = "GA", "15" = "HI", "16" = "ID", "17" = "IL", "18" = "IN", "19" = "IA", "20" = "KS", "21" = "KY", "22" = "LA", "25" = "MA", "26" = "MI", "27" = "MN", "28" = "MS", "29" = "MO", "30" = "MT", "31" = "NE", "32" = "NV", "34" = "NJ", "35" = "NM", "36" = "NY", "37" = "NC", "38" = "ND", "39" = "OH", "40" = "OK", "41" = "OR", "42" = "PA", "44" = "RI", "45" = "SC", "46" = "SD", "47" = "TN", "48" = "TX", "49" = "UT", "50" = "VT", "51" = "VA", "53" = "WA", "55" = "WI", "56" = "WY", "72" = "PR", "99" = "ZZ")
+mhcld_map <- mhcld2020
+mhcld_map$NUMMHS[mhcld_map$NUMMHS %in% c(2, 3)] <- 1
+
+state_counts_nmhss <- table(nmhss2020$LST)
+
+state_counts_nmhss <- as.data.frame(state_counts_nmhss)
+
+colnames(state_counts_nmhss) <- c("STATEFIP", "facilities")
+
+occurrences_table <- table(mhcld_map$STATEFIP[mhcld_map$NUMMHS == 1])
+
+occurrences_df <- as.data.frame(occurrences_table)
+
+colnames(occurrences_df) <- c("STATEFIP", "mentalhealthdiagnosis")
+
+occurrences_df <- mutate(occurrences_df, STATEFIP = recode(STATEFIP, !!!state_codes))
+
+# Print the updated dataframe
+# print(occurrences_df)
+
+merged_table <- merge(state_counts_nmhss, occurrences_df, by = "STATEFIP", all = TRUE)
+
+merged_table$facility_burden <- round(merged_table$mentalhealthdiagnosis / merged_table$facilities, 3)
+
+new <- usmap::us_map() %>%
+  left_join(merged_table, by = c("abbr" = "STATEFIP"))
+
+stable_map <- ggplot() + geom_sf(data = new, aes(fill = facility_burden)) + scale_fill_gradient(low = "lightblue", high = "darkred", name = "Facility Burden") + theme_minimal() + theme(legend.position = "right")
+
+stable_map
+
+Background: Client's Age
+
+{r, echo=FALSE, fig.width=8, fig.height=6}
+# Load necessary libraries
+library(ggplot2)
+library(dplyr)
+
+# Create a data frame with the provided information
+age_data <- data.frame(
+  Age_Range = c("0-11 years", "12-14 years", "15-17 years", "18-20 years", "21-24 years", 
+                "25-29 years", "30-34 years", "35-39 years", "40-44 years", "45-49 years", 
+                "50-54 years", "55-59 years", "60-64 years", "65 years and older"),
+  Frequency = c(925471, 495520, 500875, 326086, 399016, 615531, 607840, 559969, 462829, 
+                434754, 446887, 452422, 337130, 391028)
+)
+
+# Recode Age_Range column to factors to ensure correct ordering on the plot
+age_data$Age_Range <- factor(age_data$Age_Range, levels = rev(age_data$Age_Range))
+
+# Create the pyramid plot
+pyramid_plot <- ggplot(data = age_data, aes(x = Age_Range, y = Frequency)) +
+  geom_bar(stat = "identity", col = "black", fill = "skyblue") +  # Set color to black directly in geom_bar
+  coord_flip() +
+  labs(title = "Population Pyramid of Client Age",
+       x = "Age Range",
+       y = "Frequency") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))  # Rotate x-axis labels for better readability
+
+# Display the population pyramid
+print(pyramid_plot)
+
+Diverse age distribution
+
+Individuals aged 0-11 years comprise13.3% of the client population
+
+Addressing mental health needs among children and adolescents
+
+Background: Client's Gender
+
+{r, echo=FALSE}
+#| echo: false
+# Filter out rows with missing gender information
+mhcld2020_filtered <- subset(mhcld2020, GENDER != -9)
+
+# Count frequencies of each gender
+gender_counts <- table(factor(mhcld2020_filtered$GENDER, levels = c(1, 2), labels = c("Male", "Female")))
+
+# Create a pie chart with a more fancy style
+pie_chart <- ggplot(data = data.frame(gender_counts), aes(x = "", y = Freq, fill = Var1)) +
+  geom_bar(stat = "identity", width = 1, color = "black") +  # Remove border
+  coord_polar(theta = "y") +
+  geom_text(aes(label = paste0(Var1, ": ", round(Freq/sum(Freq)*100, 1), "%")),
+            position = position_stack(vjust = 0.5), color = "black", size = 5) +  # Increase text size
+  labs(title = "Distribution of Client Gender",
+       fill = "Gender") +
+  theme_void() +  # Use theme_void for a cleaner appearance
+  theme(legend.position = "bottom") +  # Adjust legend position
+  scale_fill_manual(values = c("skyblue", "pink")) +  # Change color palette
+  theme(panel.border = element_blank(),  # Remove outside square frame
+        plot.margin = unit(rep(1, 4), "cm"))  # Increase plot margin for better spacing
+
+# Display the pie chart
+print(pie_chart)
+
+Data Source
+
+MENTAL HEALTH CLIENT-LEVEL DATA (MH-CLD), 2020
+
+The MH-CLD describes demographic and mental health characteristics for clients who have used mental health services in facilities that report to individual state administrative data systems,using individual clients as the unit of analysis.
+
+NATIONAL MENTAL HEALTH SERVICES SURVEY (N-MHSS): 2020
+
+The N-MHSS collects information from all known facilities in the United States, both public and private, that provide mental health treatment services to people with mental illness.
+
+Research Question
+
+What is the distribution of mental health facilities and clients utilizing mental health services across the United States?
+
+What is the ratio of clients with mental diagnoses to the capacity of mental health facilities in each state?
+
+Which treatment methods are most widely utilized in mental health care within each state?
+
+What are the prevalent mental health conditions of clients utilizing mental health services across the US?
+
+Method | Data Wrangling
+
+left join
+
+{r, echo = FALSE, include=FALSE}
+states <- geojsonio::geojson_read("https://rstudio.github.io/leaflet/json/us-states.geojson", what = "sp")
+state_names <- c("AK" = "Alaska", "AL" = "Alabama", "AR" = "Arkansas", "AZ" = "Arizona", "CA" = "California", "CO" = "Colorado", "CT" = "Connecticut", "DC" = "District of Columbia", "DE" = "Delaware", "FL" = "Florida", "GA" = "Georgia", "HI" = "Hawaii", "IA" = "Iowa", "ID" = "Idaho", "IL" = "Illinois", "IN" = "Indiana", "KS" = "Kansas", "KY" = "Kentucky", "LA" = "Louisiana", "MA" = "Massachusetts", "MD" = "Maryland", "ME" = "Maine", "MI" = "Michigan", "MN" = "Minnesota", "MO" = "Missouri", "MS" = "Mississippi", "MT" = "Montana", "NC" = "North Carolina", "ND" = "North Dakota", "NE" = "Nebraska", "NH" = "New Hampshire", "NJ" = "New Jersey", "NM" = "New Mexico", "NV" = "Nevada", "NY" = "New York", "OH" = "Ohio", "OK" = "Oklahoma", "OR" = "Oregon", "PA" = "Pennsylvania", "PR" = "Puerto Rico", "RI" = "Rhode Island", "SC" = "South Carolina", "SD" = "South Dakota", "TN" = "Tennessee", "TX" = "Texas", "UT" = "Utah", "VA" = "Virginia", "VT" = "Vermont", "WA" = "Washington", "WI" = "Wisconsin", "WV" = "West Virginia", "WY" = "Wyoming", "ZZ"= "Other jurisdictions")
+
+# Replace the abbreviation with full state names
+
+merged_table$STATE <- state_names[merged_table$STATEFIP]
+
+merged_data1 <- left_join(attributes(states)$data, merged_table, by = c("name" = "STATE"))
+
+merged_data2 <- subset(merged_data1, select = -c(id, STATEFIP, density))
+
+library(DT)
+
+{r, echo = FALSE, include = TRUE}
+d1<-datatable(merged_data2, options = list(pageLength = 5))
+d1
+
+pivot longer
+
+We take LST, treatments,and pivot data longer.
+
+{r, echo = FALSE, include=FALSE}
+library(DT)
+long_treatment1 <- state_treatment %>% 
+  pivot_longer(
+    cols = !LST, 
+    names_to = "treatments", 
+    values_to = "n",
+    values_drop_na = TRUE
+  ) %>%
+  rename(
+    state_postal_code = LST,
+    facilities_using_this = n
+  )
+
+{r, echo = FALSE, include = TRUE}
+d2<-datatable(long_treatment1, options = list(pageLength = 5))
+d2
+
+Method | Data Visualization
+
+Leaflet nationwide interactive choropleth.
+
+{r, echo = TRUE, eval = FALSE}
+#| echo: true
+library("sf")
+library(leaflet)
+
+states <- geojsonio::geojson_read(
+  "https://rstudio.github.io/leaflet/json/us-states.geojson",
+  what = "sp"
+  )
+
+m <- leaflet(states) %>%
+  setView(-96, 37.8, 4) %>%
+  addProviderTiles("MapBox", options = providerTileOptions(
+    id = "mapbox.light",
+    accessToken = Sys.getenv('MAPBOX_ACCESS_TOKEN')))
+
+Interactive circular bar chart in dash board.
+
+{r, echo = TRUE, eval = FALSE}
+#| echo: true
+#| context: server
+illness_data <- reactive({
+long_illness %>%
+  filter(LST == input$LST) %>%
+  head(10)
+})
+output$plot3 <- renderPlot({
+ggplot(illness_data()) +
+  # Make it circular!
+  coord_polar() 
+})
+
+Leaflet nationwide interactive choropleth: See the data in your state!
+
+{r, echo = FALSE, results = 'asis', eval = TRUE}
+#| echo: false
+state_names <- c("AK" = "Alaska", "AL" = "Alabama", "AR" = "Arkansas", "AZ" = "Arizona", "CA" = "California", "CO" = "Colorado", "CT" = "Connecticut", "DC" = "District of Columbia", "DE" = "Delaware", "FL" = "Florida", "GA" = "Georgia", "HI" = "Hawaii", "IA" = "Iowa", "ID" = "Idaho", "IL" = "Illinois", "IN" = "Indiana", "KS" = "Kansas", "KY" = "Kentucky", "LA" = "Louisiana", "MA" = "Massachusetts", "MD" = "Maryland", "ME" = "Maine", "MI" = "Michigan", "MN" = "Minnesota", "MO" = "Missouri", "MS" = "Mississippi", "MT" = "Montana", "NC" = "North Carolina", "ND" = "North Dakota", "NE" = "Nebraska", "NH" = "New Hampshire", "NJ" = "New Jersey", "NM" = "New Mexico", "NV" = "Nevada", "NY" = "New York", "OH" = "Ohio", "OK" = "Oklahoma", "OR" = "Oregon", "PA" = "Pennsylvania", "PR" = "Puerto Rico", "RI" = "Rhode Island", "SC" = "South Carolina", "SD" = "South Dakota", "TN" = "Tennessee", "TX" = "Texas", "UT" = "Utah", "VA" = "Virginia", "VT" = "Vermont", "WA" = "Washington", "WI" = "Wisconsin", "WV" = "West Virginia", "WY" = "Wyoming", "ZZ"= "Other jurisdictions")
+
+# Replace the abbreviation with full state names
+
+merged_table$STATE <- state_names[merged_table$STATEFIP]
+
+merged_data1 <- left_join(attributes(states)$data, merged_table, by = c("name" = "STATE"))
+
+m <- leaflet(states) %>%
+  setView(-96, 37.8, 4) %>%
+  addProviderTiles("MapBox", options = providerTileOptions(
+    id = "mapbox.light",
+    accessToken = Sys.getenv('MAPBOX_ACCESS_TOKEN')))
+
+m <- m %>% addPolygons()
+
+bins <- c(0, 10, 20, 50, 100, 200, 500, 1000, Inf)
+pal <- colorBin("YlOrRd", domain = merged_data1$facility_burden, bins = bins)
+
+m <- m %>% addPolygons(
+  fillColor = ~pal(merged_data1$facility_burden),
+  weight = 2,
+  opacity = 1,
+  color = "white",
+  dashArray = "3",
+  fillOpacity = 0.7)
+    
+    
+m <- m %>% addPolygons(
+  fillColor = ~pal(merged_data1$facility_burden),
+  weight = 2,
+  opacity = 1,
+  color = "white",
+  dashArray = "3",
+  fillOpacity = 0.7,
+  highlightOptions = highlightOptions(
+    weight = 5,
+    color = "#666",
+    dashArray = "",
+    fillOpacity = 0.7,
+    bringToFront = TRUE))
+
+labels <- sprintf(
+  "<strong>%s</strong><br/>Clients with Mental Illness: %s<br/>Number of Facilities: %d<br/>%g clients / facility",
+  merged_data1$name, merged_data1$mentalhealthdiagnosis, merged_data1$facilities, merged_data1$facility_burden
+) %>% lapply(htmltools::HTML)
+
+m <- m %>% addPolygons(
+  fillColor = ~pal(merged_data1$facility_burden),
+  weight = 2,
+  opacity = 1,
+  color = "white",
+  dashArray = "3",
+  fillOpacity = 0.7,
+  highlightOptions = highlightOptions(
+    weight = 5,
+    color = "#666",
+    dashArray = "",
+    fillOpacity = 0.7,
+    bringToFront = TRUE),
+  label = labels,
+  labelOptions = labelOptions(
+    style = list("font-weight" = "normal", padding = "3px 8px"),
+    textsize = "15px",
+    direction = "auto"))
+
+m <- m %>% 
+addLegend(pal = pal, values = ~merged_data1$facility_burden, opacity = 0.7, title = NULL, position = "bottomright")
+  
+m
+
+Interactive circular bar chart in dashboard
+
+What's the most popular treatment in your state?
+
+<iframe src="http://localhost:5092/dashboard_insert.qmd#" width="100%" height="600px">
+
+</iframe>
+
+Mental Health Diagnosis and Comorbidity
+
+Single diagnosis > Two diagnoses > No diagnosis!!!
+
+Need more integrated care targeting comorbid mental health diseases.
+
+{r, echo=FALSE, results='asis'}
+#| echo: false
+library(ggplot2)
+library(plotly)
+library(ggrepel)
+library(RColorBrewer)
+
+# Subset the dataset and load necessary packages
+mhcld2020_selected <- mhcld2020 %>%
+  select(NUMMHS, CASEID)
+
+# Convert to data frame and rename columns
+mhcld_pie <- data.frame(mhcld2020_selected)
+colnames(mhcld_pie) <- colnames(mhcld2020_selected)
+rownames(mhcld_pie) <- rownames(mhcld2020_selected)
+
+# Extract category names into a column
+mhcld_pie$Categories <- rownames(mhcld2020_selected)
+
+# Define color palette
+myCols <- brewer.pal(4, "Set2")
+
+# Group and summarize data for pie chart
+pie_input <- mhcld_pie %>%
+  group_by(NUMMHS) %>%
+  summarise(n = n()) %>%
+  mutate(NUMMHS = case_when(
+    NUMMHS == 0 ~ "no mental diagnosis",
+    NUMMHS == 1 ~ "one mental diagnosis",
+    NUMMHS == 2 ~ "two mental health diagnoses",
+    NUMMHS == 3 ~ "three mental health diagnoses",
+    TRUE ~ as.character(NUMMHS)  # Keep other values unchanged
+  ))
+
+# Create the pie chart
+pie <- plot_ly(
+  type = "pie",
+  data = pie_input,
+  labels = ~NUMMHS,
+  values = ~n,
+  sort = FALSE,  # Do not sort the pie
+  hole = 0.6,  # Define the radius of the hole
+  pull = 0.2,  # Pull the slices apart
+  rotation = 10,  # Rotate the pie chart
+  textposition = 'inside',  # Position text inside slices
+  textinfo = 'label+percent',  # Display label and percent
+  insidetextfont = list(color = '#FFFFFF'),  # Color of inside text
+  hoverinfo = 'text+percent',  # Display hover text
+  text = ~paste('<b>Category: ', NUMMHS, '</b><br>', "Value: ", n),
+  marker = list(
+    colors = myCols,  # Custom colors
+    line = list(color = 'black', width = 1)  # Border colors
+  )
+) %>%
+  layout(
+    legend = list(
+      orientation = "h",  # Horizontal legend
+      title = "none",  # No legend title
+      x = 0.25,  # Adjust horizontal starting point
+      y = 0  # Adjust vertical starting point
+    )
+  )
+
+# Display the pie chart
+pie
+
+Thank you for listening!
+

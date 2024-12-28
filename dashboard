@@ -1,0 +1,524 @@
+---
+title: "US Nation-wide Mental Health Facilities"
+author: "Abby Wang & Alice Cui"
+format: dashboard
+server: shiny
+---
+
+```{r}
+#| context: setup
+
+library(ggplot2) 
+library(usmap) 
+library(readr)
+library(tidyverse)
+library(feb2)
+library(dplyr)
+library(shiny)
+library("sf")
+library(leaflet)
+remotes::install_github("rstudio/leaflet")
+nmhss2020 <- read.csv("data/nmhss2020.csv") 
+mhcld2020 <- read.csv("data/mhcld_puf_2020.csv")
+
+raw_facilities <- read.csv("data/nmhss2020.csv") %>%
+  mutate(facility_type = case_when(
+    FACILITYTYPE == 1 ~ "Psychiatric hospital",
+    FACILITYTYPE == 2 ~ "Separate inpatient psychiatric unit of a general hospital", 
+    FACILITYTYPE == 3 ~ "Residential trestment center for children", 
+    FACILITYTYPE == 4 ~ "Residential treatment center for adults",
+    FACILITYTYPE == 5 ~ "Other types of residential treatment facility", 
+    FACILITYTYPE == 6 ~ "Veterans Administration Medical Center (VAMC)", 
+    FACILITYTYPE == 7 ~ "Community Mental Health Center (CMHC)", 
+    FACILITYTYPE == 8 ~ "Certified Community Behavioral Health Clinic (CCBHC)",
+    FACILITYTYPE == 9 ~ "Partial hospitalization/day treatment facility", 
+    FACILITYTYPE == 10 ~ "Outpatient mental health facility", 
+    FACILITYTYPE == 11 ~ "Multi-setting mental health facility", 
+    FACILITYTYPE == 12 ~ "Other")
+) %>%
+  mutate(facility_type = factor(facility_type))
+
+
+  state_treatment_1 <- raw_facilities %>%
+  group_by(LST) %>%
+  filter(TREATPSYCHOTHRPY == 1) %>%
+  count()%>%
+  rename(psychotherapy = n)
+
+  state_treatment_2 <- raw_facilities %>%
+  group_by(LST) %>%
+  filter(TREATFAMTHRPY == 1) %>%
+  count()%>%
+  rename("couples/family therapy" = n)
+
+  state_treatment_3 <- raw_facilities %>%
+  group_by(LST) %>%
+  filter(TREATGRPTHRPY == 1) %>%
+  count()%>%
+  rename("group therapy" = n)
+
+  state_treatment_4 <- raw_facilities %>%
+  group_by(LST) %>%
+  filter(TREATCOGTHRPY == 1) %>%
+  count()%>%
+  rename("cognitive behavioral therapy" = n)
+
+  state_treatment_5 <- raw_facilities %>%
+  group_by(LST) %>%
+  filter(TREATDIALTHRPY == 1) %>%
+  count()%>%
+  rename("dialectical behavior therapy" = n)
+
+  state_treatment_6 <- raw_facilities %>%
+  group_by(LST) %>%
+  filter(TREATBEHAVMOD == 1) %>%
+  count()%>%
+  rename("behavior modification" = n)
+
+  state_treatment_7 <- raw_facilities %>%
+  group_by(LST) %>%
+  filter(TREATDUALMHSA == 1) %>%
+  count()%>%
+  rename("dual disorders treatment" = n)
+
+  state_treatment_8 <- raw_facilities %>%
+  group_by(LST) %>%
+  filter(TREATTRAUMATHRPY == 1) %>%
+  count()%>%
+  rename("trauma therapy" = n)
+
+  state_treatment_9 <- raw_facilities %>%
+  group_by(LST) %>%
+  filter(TREATACTVTYTHRPY == 1) %>%
+  count()%>%
+  rename("activity therapy" = n)
+
+  state_treatment_10 <- raw_facilities %>%
+  group_by(LST) %>%
+  filter(TREATELECTRO == 1) %>%
+  count()%>%
+  rename("electroconvulsive therapy" = n)
+
+  state_treatment_11 <- raw_facilities %>%
+  group_by(LST) %>%
+  filter(TREATTMS == 1) %>%
+  count()%>%
+  rename("Transcranial Magnetic Stimulation (TMS)" = n)
+
+  state_treatment_12 <- raw_facilities %>%
+  group_by(LST) %>%
+  filter(TREATKIT == 1) %>%
+  count()%>%
+  rename("Ketamine Infusion Therapy (KIT)" = n)
+
+  state_treatment_13 <- raw_facilities %>%
+  group_by(LST) %>%
+  filter(TREATEMDR == 1) %>%
+  count()%>%
+  rename("Eye Movement Desensitization and Reprocessing (EMDR)" = n)
+
+  state_treatment_14 <- raw_facilities %>%
+  group_by(LST) %>%
+  filter(TREATTELEMEDINCE == 1) %>%
+  count()%>%
+  rename("telemedicine/telehealth therapy" = n)
+
+  state_treatment_15 <- raw_facilities %>%
+  group_by(LST) %>%
+  filter(TREATOTH == 1) %>%
+  count()%>%
+  rename("other mental health treatment approach" = n)
+
+  state_treatment_16 <- raw_facilities %>%
+  group_by(LST) %>%
+  filter(NOTREAT == 1) %>%
+  count()%>%
+  rename("none of the identified mental health treatment approach" = n)
+
+  state_treatment_17 <- raw_facilities %>%
+  group_by(LST) %>%
+  filter(TREATCOGREM == 1) %>%
+  count()%>%
+  rename("cognitive remediation therapy" = n)
+  
+state_treatment <- full_join(state_treatment_1, state_treatment_2, by = "LST") %>%
+  full_join(state_treatment_3, by = "LST") %>%
+  full_join(state_treatment_4, by = "LST") %>%
+  full_join(state_treatment_5, by = "LST") %>%
+  full_join(state_treatment_17, by = "LST") %>%
+  full_join(state_treatment_6, by = "LST") %>%
+  full_join(state_treatment_7, by = "LST") %>%
+  full_join(state_treatment_8, by = "LST") %>%
+  full_join(state_treatment_9, by = "LST") %>%
+  full_join(state_treatment_10, by = "LST") %>%
+  full_join(state_treatment_11, by = "LST") %>%
+  full_join(state_treatment_12, by = "LST") %>%
+  full_join(state_treatment_13, by = "LST") %>%
+  full_join(state_treatment_14, by = "LST") %>%
+  full_join(state_treatment_15, by = "LST") %>%
+  full_join(state_treatment_16, by = "LST") 
+
+long_treatment <- state_treatment %>% 
+  pivot_longer(
+    cols = !LST, 
+    names_to = "treatments", 
+    values_to = "n",
+    values_drop_na = TRUE
+  )
+
+state_codes <- c("1" = "AK", "2" = "AL", "4" = "AZ", "5" = "AR", "6" = "CA", "8" = "CO", "9" = "CT", "10" = "DE", "11" = "DC", "12" = "FL", "13" = "GA", "15" = "HI", "16" = "ID", "17" = "IL", "18" = "IN", "19" = "IA", "20" = "KS", "21" = "KY", "22" = "LA", "25" = "MA", "26" = "MI", "27" = "MN", "28" = "MS", "29" = "MO", "30" = "MT", "31" = "NE", "32" = "NV", "34" = "NJ", "35" = "NM", "36" = "NY", "37" = "NC", "38" = "ND", "39" = "OH", "40" = "OK", "41" = "OR", "42" = "PA", "44" = "RI", "45" = "SC", "46" = "SD", "47" = "TN", "48" = "TX", "49" = "UT", "50" = "VT", "51" = "VA", "53" = "WA", "55" = "WI", "56" = "WY", "72" = "PR", "99" = "ZZ")
+
+mhcld2020$STATEFIP <- factor(mhcld2020$STATEFIP, levels = names(state_codes), labels = state_codes)
+
+
+
+mhcld2020_new <- mhcld2020%>%
+  mutate(illness_1_type = case_when(
+    MH1 == 1 ~ "Trauma- and stressor-related disorders",
+    MH1 == 2 ~ "Anxiety disorders", 
+    MH1 == 3 ~ "Attention deficit/hyperactivity disorder (ADHD)", 
+    MH1 == 4 ~ "Conduct disorders",
+    MH1 == 5 ~ "Delirium, dementia", 
+    MH1 == 6 ~ "Bipolar disorders", 
+    MH1 == 7 ~ "Depressive disorders", 
+    MH1 == 8 ~ "Oppositional defiant disorders",
+    MH1 == 9 ~ "Pervasive developmental disorders", 
+    MH1 == 10 ~ "Personality disorders", 
+    MH1 == 11 ~ "Schizophrenia or other psychotic disorders", 
+    MH1 == 12 ~ "Alcohol or substance use disorders", 
+    MH1 == 13 ~ "Other disorders/conditions", 
+    MH1 == 14 ~ "Missing/unknown/not collected/invalid/no or deferred diagnosis")
+) %>%
+  mutate(illness_1_type = factor(illness_1_type))
+
+mhcld2020_new <- mhcld2020_new %>%
+  rename(LST = STATEFIP)
+
+count_illness_1 <- mhcld2020_new %>%
+  group_by(LST, illness_1_type) %>%
+  summarize(n1 = n()) 
+count_illness_1 <- count_illness_1 %>%
+  rename(illness_type = illness_1_type)
+
+mhcld2020_new <- mhcld2020_new%>%
+  mutate(illness_2_type = case_when(
+    MH2 == 1 ~ "Trauma- and stressor-related disorders",
+    MH2 == 2 ~ "Anxiety disorders", 
+    MH2 == 3 ~ "Attention deficit/hyperactivity disorder (ADHD)", 
+    MH2 == 4 ~ "Conduct disorders",
+    MH2 == 5 ~ "Delirium, dementia", 
+    MH2 == 6 ~ "Bipolar disorders", 
+    MH2 == 7 ~ "Depressive disorders", 
+    MH2 == 8 ~ "Oppositional defiant disorders",
+    MH2 == 9 ~ "Pervasive developmental disorders", 
+    MH2 == 10 ~ "Personality disorders", 
+    MH2 == 11 ~ "Schizophrenia or other psychotic disorders", 
+    MH2 == 12 ~ "Alcohol or substance use disorders", 
+    MH2 == 13 ~ "Other disorders/conditions", 
+    MH2 == 14 ~ "Missing/unknown/not collected/invalid/no or deferred diagnosis")
+) %>%
+  mutate(illness_2_type = factor(illness_2_type))
+
+count_illness_2 <- mhcld2020_new %>%
+  group_by(LST, illness_2_type) %>%
+  summarize(n2 = n()) 
+count_illness_2 <- count_illness_2 %>%
+  rename(illness_type = illness_2_type)
+
+mhcld2020_new <- mhcld2020_new%>%
+  mutate(illness_3_type = case_when(
+    MH3 == 1 ~ "Trauma- and stressor-related disorders",
+    MH3 == 2 ~ "Anxiety disorders", 
+    MH3 == 3 ~ "Attention deficit/hyperactivity disorder (ADHD)", 
+    MH3 == 4 ~ "Conduct disorders",
+    MH3 == 5 ~ "Delirium, dementia", 
+    MH3 == 6 ~ "Bipolar disorders", 
+    MH3 == 7 ~ "Depressive disorders", 
+    MH3 == 8 ~ "Oppositional defiant disorders",
+    MH3 == 9 ~ "Pervasive developmental disorders", 
+    MH3 == 10 ~ "Personality disorders", 
+    MH3 == 11 ~ "Schizophrenia or other psychotic disorders", 
+    MH3 == 12 ~ "Alcohol or substance use disorders", 
+    MH3 == 13 ~ "Other disorders/conditions", 
+    MH3 == 14 ~ "Missing/unknown/not collected/invalid/no or deferred diagnosis")
+) %>%
+  mutate(illness_3_type = factor(illness_3_type))
+
+count_illness_3 <- mhcld2020_new %>%
+  group_by(LST, illness_3_type) %>%
+  summarize(n3 = n())
+count_illness_3 <- count_illness_3 %>%
+  rename(illness_type = illness_3_type)
+
+count_illness <- count_illness_1 %>%
+  full_join(count_illness_2, by = c("LST", "illness_type")) %>%
+  full_join(count_illness_3, by = c("LST", "illness_type"))
+
+count_illness <- count_illness %>% 
+  mutate(n = n1 + n2 + n3)
+
+long_illness <- count_illness[, !names(count_illness) %in% c("n1", "n2", "n3")]
+```
+
+# {.sidebar}
+
+```{r}
+selectInput("LST", label = h3("Select the States"), 
+    choices = list("alabama" = "AL", "alaska" = "AK", "arizona" = "AZ", "arkansas" = "AR",
+  "california" = "CA", "colorado" = "CO", "connecticut" = "CT", "delaware" = "DE",
+  "florida" = "FL", "georgia" = "GA", "hawaii" = "HI", "idaho" = "ID",
+  "illinois" = "IL", "indiana" = "IN", "iowa" = "IA", "kansas" = "KS",
+  "kentucky" = "KY", "louisiana" = "LA", "maine" = "ME", "maryland" = "MD",
+  "massachusetts" = "MA", "michigan" = "MI", "minnesota" = "MN", "mississippi" = "MS",
+  "missouri" = "MO", "montana" = "MT", "nebraska" = "NE", "nevada" = "NV",
+  "new hampshire" = "NH", "new jersey" = "NJ", "new mexico" = "NM", "new york" = "NY",
+  "north carolina" = "NC", "north dakota" = "ND", "ohio" = "OH", "oklahoma" = "OK",
+  "oregon" = "OR", "pennsylvania" = "PA", "rhode island" = "RI", "south carolina" = "SC",
+  "south dakota" = "SD", "tennessee" = "TN", "texas" = "TX", "utah" = "UT",
+  "vermont" = "VT", "virginia" = "VA", "washington" = "WA", "west virginia" = "WV",
+  "wisconsin" = "WI", "wyoming" = "WY"), 
+    selected = "AL")
+
+
+```
+
+```{r}
+#| context: server
+
+facility_data <- reactive({
+  
+
+raw_facilities %>%
+  filter(LST == input$LST) %>%
+  group_by(facility_type) %>%
+  summarise(
+    n = n()
+  ) %>%
+  arrange(desc(n)) %>%
+  head(10)
+
+})
+
+output$plot <- renderPlot({
+  
+ggplot(facility_data()) +
+  # Make custom panel grid
+  geom_hline(aes(yintercept = y), 
+    data.frame(y = c(0:3) * 1000),
+    color = "lightgrey") + 
+  # Add bars to represent the number of facilities
+  geom_col(
+    aes(
+      x = reorder(str_wrap(facility_type, 10), n),
+      y = n,
+      fill = as.factor(n)
+    ),
+    position = "dodge2",
+    show.legend = TRUE,
+    alpha = .7
+  ) +
+  # Add dots to represent the number of facilities
+  geom_point(
+    aes(
+      x = reorder(str_wrap(facility_type, 10), n),
+      y = n
+    ),
+    size = 2,
+    color = "gray12"
+  ) +
+  # Lollipop shaft for the number of facilities
+  geom_segment(
+    aes(
+      x = reorder(str_wrap(facility_type, 10), n),
+      y = 0,
+      xend = reorder(str_wrap(facility_type, 10), n),
+      yend = n
+    ),
+    linetype = "dashed",
+    color = "gray12"
+  ) + 
+  # Adjust the y-axis labels
+  scale_y_continuous(expand = c(0, 0), limits = c(-20, max(facility_data()$n) * 1.0)) +
+  # Rotate x-axis labels
+  theme(axis.text.x = element_text(angle = 0, hjust = 1)) +
+  # Title and labels
+  labs(
+    title = paste0("Top 10 Facility Types in ", input$LST),
+    x = "Facility Type",
+    y = "Number of Facilities"
+  ) +
+  theme(
+    # Use gray text for the region names
+    axis.text.x = element_text(color = "gray20", size = 7),
+    # Move the legend to the bottom
+    legend.position = "bottom",
+  ) +
+  # Make it circular!
+  coord_polar() + 
+    guides(fill=guide_legend(title="Number of facilities"))
+
+})
+```
+
+```{r}
+#| context: server
+
+treatment_data <- reactive({
+
+long_treatment %>%
+  filter(LST == input$LST) %>%
+  head(10)
+
+})
+
+
+output$plot2 <- renderPlot({
+  
+ggplot(treatment_data()) +
+  # Make custom panel grid
+  geom_hline(aes(yintercept = y), 
+    data.frame(y = c(0:3) * 1000),
+    color = "lightgrey") + 
+  # Add bars to represent the number of facilities
+  geom_col(
+    aes(
+      x = reorder(str_wrap(treatments, 10), n),
+      y = n,
+      fill = as.factor(n)
+    ),
+    position = "dodge2",
+    show.legend = TRUE,
+    alpha = .7
+  ) +
+  # Add dots to represent the number of facilities
+  geom_point(
+    aes(
+      x = reorder(str_wrap(treatments, 10), n),
+      y = n
+    ),
+    size = 2,
+    color = "gray12"
+  ) +
+  # Lollipop shaft for the number of facilities
+  geom_segment(
+    aes(
+      x = reorder(str_wrap(treatments, 10), n),
+      y = 0,
+      xend = reorder(str_wrap(treatments, 10), n),
+      yend = n
+    ),
+    linetype = "dashed",
+    color = "gray12"
+  ) + 
+  # Adjust the y-axis labels
+  scale_y_continuous(expand = c(0, 0), limits = c(-20, max(treatment_data()$n) * 1.0)) +
+  # Rotate x-axis labels
+  theme(axis.text.x = element_text(angle = 0, hjust = 1)) +
+  # Title and labels
+  labs(
+    title = paste0("Top 10 Treatment Used in ", input$LST),
+    x = "Treatment Type",
+    y = "Number of Facilities that Use this Treatment"
+  ) +
+  theme(
+    # Use gray text for the region names
+    axis.text.x = element_text(color = "gray20", size = 7),
+    # Move the legend to the bottom
+    legend.position = "bottom",
+  ) +
+  # Make it circular!
+  coord_polar() + 
+    guides(fill=guide_legend(title="Number of facilities using this treatment"))
+
+})
+```
+
+```{r}
+#| context: server
+
+illness_data <- reactive({
+  
+
+long_illness %>%
+  filter(LST == input$LST) %>%
+  head(10)
+
+})
+
+output$plot3 <- renderPlot({
+  
+ggplot(illness_data()) +
+  # Make custom panel grid
+  geom_hline(aes(yintercept = y), 
+    data.frame(y = c(0:3) * 1000),
+    color = "lightgrey") + 
+  # Add bars to represent the number of illness
+  geom_col(
+    aes(
+      x = reorder(str_wrap(illness_type, 10), n),
+      y = n,
+      fill = as.factor(n)
+    ),
+    position = "dodge2",
+    show.legend = TRUE,
+    alpha = .7
+  ) +
+  # Add dots to represent the number of illness
+  geom_point(
+    aes(
+      x = reorder(str_wrap(illness_type, 10), n),
+      y = n
+    ),
+    size = 2,
+    color = "gray12"
+  ) +
+  # Lollipop shaft for the number of illness
+  geom_segment(
+    aes(
+      x = reorder(str_wrap(illness_type, 10), n),
+      y = 0,
+      xend = reorder(str_wrap(illness_type, 10), n),
+      yend = n
+    ),
+    linetype = "dashed",
+    color = "gray12"
+  ) + 
+  # Adjust the y-axis labels
+  scale_y_continuous(expand = c(0, 0), limits = c(-1000, max(illness_data()$n) * 1.0)) +
+  # Rotate x-axis labels
+  theme(axis.text.x = element_text(angle = 0, hjust = 1)) +
+  # Title and labels
+  labs(
+    title = paste0("Top 10 Mental Health Diagnosis in ", input$LST),
+    x = "Name of Diagnosis",
+    y = "Number of People"
+  ) +
+  theme(
+    # Use gray text for the region names
+    axis.text.x = element_text(color = "gray20", size = 7),
+    # Move the legend to the bottom
+    legend.position = "bottom",
+  ) +
+  # Make it circular!
+  coord_polar() + 
+    guides(fill=guide_legend(title="Number of Mental Health Diagnosis"))
+
+})
+```
+
+# Facilities used in Your Area
+```{r}
+plotOutput('plot')
+```
+
+# Top popular Treatment in your area
+```{r}
+plotOutput('plot2')
+```
+
+# Top Mental health diagnosis in your area
+```{r}
+plotOutput('plot3')
+```
+
+

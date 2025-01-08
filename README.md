@@ -74,88 +74,221 @@ Reprocessing(‘TREATEMDR’), telemedicine/telehealth therapy(’
 TREATTELEMEDINCE’), other mental health treatment approach(‘TREATOTH’),
 none of the identified mental health treatment approaches(‘NOTREAT’).
 
+## Dataset: mhcld2020
+
+---------------------------------
+Feature                    Result
+------------------------ --------
+Number of observations    6959702
+
+Number of variables             7
+---------------------------------
+
+
+## Dataset: nmhss2020
+
+---------------------------------
+Feature                    Result
+------------------------ --------
+Number of observations      12275
+
+Number of variables            20
+---------------------------------
+
+# Codebook summary table - mhcld2020
+
+--------------------------------------------------------------------------------------------------------
+Label   Variable                 Class         # unique  Missing   Description                          
+                                                 values                                                 
+------- ------------------------ ----------- ---------- ---------- -------------------------------------
+        **[CASEID]**             Numeric      6959702    0.00 %    Case identification number    
+        
+        **[NUMMHS]**             Numeric            4    0.00 %    Number of mental health diagnoses reported    
+        
+        **[MH1]**                Numeric           14    0.00 %    Mental health diagnosis one                              
+
+        **[MH2]**                Numeric           14    0.00 %   Mental health diagnosis two                            
+
+        **[MH3]**                Numeric           14    0.00 %    Mental health diagnosis three          
+
+        **[STATEFIP]**           Numeric           49    0.00 %    Reporting state code    
+
+        **[LST]**                character         49    0.00 %    State Abberiviations    
+
+        **[GENDER]**             Numeric            3    0.00 %     Sex     
+
+        **[AGE]**                Numeric           15    0.00 %     Age (recoded)       
+                                                                   
+--------------------------------------------------------------------------------------------------------
+
+
+# Codebook summary table - nmhss2020
+
+--------------------------------------------------------------------------------------------------------
+Label   Variable                 Class         # unique  Missing   Description                          
+                                                 values                                                 
+------- ------------------------ ----------- ---------- ---------- -------------------------------------
+        **[CASEID]**             Numeric        12275    0.00 %    Case identification number    
+        
+        **[LST]**                Numeric           53    0.00 %    State Abberiviations                              
+
+        **[FACILITYTYPE]**       Numeric           12    0.00 %   Facility type                            
+
+        **[TREATPSYCHOTHRPY]**   Numeric            2    0.00 %    Facility offers individual psychotherapy          
+
+        **[TREATFAMTHRPY]**      Numeric            2    0.00 %    Facility offers couples/family therapy   
+
+        **[TREATGRPTHRPY]**      character          2    0.00 %    Facility offers group therapy    
+
+        **[TREATCOGTHRPY]**      Numeric            2    0.00 %    Facility offers cognitive behavioral therapy     
+
+        **[TREATDIALTHRPY]**     Numeric            2    0.00 %    Facility offers dialectical behavior therapy       
+
+        **[TREATCOGREM]**        character          2    0.00 %    Facility provides cognitive remediation therapy
+        
+        **[TREATBEHAVMOD]**      character          2    0.00 %    Facility offers behavior modification
+        
+        **[TREATDUALMHSA]**      character          2    0.00 %    Facility offers integrated dual disorders treatment 
+        
+        **[TREATTRAUMATHRPY]**   character          2    0.00 %    Facility offers trauma therapy
+        
+        **[TREATACTVTYTHRPY]**   character          2    0.00 %    Facility offers activity therapy
+        
+        **[TREATELECTRO]**       character          2    0.00 %    Facility offers electroconvulsive therapy
+        
+        **[TREATTMS]**            Numeric           2    0.00 %    Facility provides Transcranial Magnetic Stimulation (TMS)
+        
+        **[TREATKIT]**            Numeric           2    0.00 %    Facility provides Ketamine Infusion Therapy (KIT)
+        
+        **[TREATEMDR]**           Numeric           2    0.00 %    Facility provides Eye Movement Desensitization and Reprocessing (EMDR)
+        
+        **[TREATTELEMEDINCE]**    Numeric           2    0.00 %    Facility offers telemedicine/telehealth therapy
+        
+        **[TREATOTH]**            Numeric           2    0.00 %    Facility offers other mental health treatment approach
+        
+        **[NOTREAT]**             Numeric           2    0.00 %    Facility offers none of the identified mental health treatment approaches
+--------------------------------------------------------------------------------------------------------
+
+# Variable list - mhcld2020
+
+## CASEID
+
+-------------------------------------
+Feature                        Result
+------------------------- -----------
+Variable type                 Numeric
+
+Number of missing obs.        0 (0 %)
+
+Number of unique values       6959702
+
+-------------------------------------
+
+## NUMMHS
+
+-----------------------------------------------------------
+Label                                                Value
+----------------------------------------------- -----------
+No mental health diagnoses reported                    0
+
+One mental health diagnoses reported                   1
+
+Two mental health diagnoses reported                   2
+
+Three mental health diagnoses reported                 3
+-----------------------------------------------------------
+
+
 ## Methodology
 
-In our methodology, we began by filtering out unnecessary rows from the
-dataset. Next, we focused on the variable ‘FACILITYTYPE’ and computed
-the count of facilities using each treatment category within every
-class. Since ‘FACILITYTYPE’ is encoded numerically from 1 to 13, with
-‘-9’ representing NA values, we decoded the facility names and assigned
-them to their respective numeric categories within ‘FACILITYTYPE’. We
-count different facility types in different states. Using these data, we
-plotted a circular bar graph for different states, showing the top 10
-facilities built in each states.
+import React from 'react';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
-To streamline our analysis, we aimed to represent each treatment type
-numerically and tally the number of facilities employing each treatment.
-However, in the original dataset, treatments were encoded as separate
-variables. To address this, we created 17 subsets named
-“state_treatment_n”, where each subset corresponds to a specific
-treatment. Each of these subsets comprises two columns, representing the
-state postal code and the number of facilities using this treatment in
-each state.
+const MethodologyDoc = () => {
+  const sections = [
+    {
+      title: "Data Preprocessing",
+      content: [
+        {
+          subtitle: "Facility Type Analysis",
+          details: "We filtered unnecessary rows and processed the 'FACILITYTYPE' variable, which was numerically encoded from 1 to 13 (-9 for NA values). We decoded facility names and assigned them to their respective categories, then counted different facility types across states. This data formed the basis for our circular bar graphs showing top 10 facilities by state."
+        },
+        {
+          subtitle: "Treatment Analysis",
+          details: "To represent treatment types numerically, we created 17 'state_treatment_n' subsets, each containing state postal codes and facility counts per treatment. These were merged using full-join operations into 'state_treatment', then transformed into 'long_treatment' format with columns: 'LST', 'treatments', and 'n'. This data powers our visualization of top 10 treatments by state."
+        },
+        {
+          subtitle: "Mental Health Disease Analysis",
+          details: "We analyzed variables 'MH1', 'MH2', and 'MH3' representing primary, secondary, and tertiary diagnoses. By combining these, we captured comorbidities and overall disease prevalence. The data was decoded and joined by 'LST' and 'illness_type', with counts aggregated to show disease distribution across states."
+        }
+      ]
+    },
+    {
+      title: "Geographic Mapping",
+      content: [
+        {
+          subtitle: "State Code Mapping",
+          details: "We created a mapping system between state codes and abbreviations, generating tables for facility counts (state_counts_nmhss) and diagnoses (occurrences_df) by state."
+        },
+        {
+          subtitle: "Client Diagnosis Coding",
+          details: "Using 'NUMMHS' variable (0-3 range), we categorized clients based on number of diagnoses, recoding multiple diagnoses (2-3) as '1' to identify clients with any mental health diagnosis."
+        },
+        {
+          subtitle: "Data Integration",
+          details: "We merged facility and diagnosis data using 'STATE' as the join key, then integrated with US map data. The resulting table includes state names, facility counts, diagnosis counts, and facility burden calculations."
+        }
+      ]
+    },
+    {
+      title: "Visualization Implementation",
+      content: [
+        {
+          subtitle: "Interactive Choropleth",
+          details: "Using leaflet package, we created an interactive map showing the distribution of clients, facilities, and facility burden across US states."
+        },
+        {
+          subtitle: "Interactive Dashboard",
+          details: "Developed circular bar charts showing facility types, treatment methods, and mental health diagnoses by state."
+        },
+        {
+          subtitle: "Diagnosis Distribution",
+          details: "Implemented plotly visualizations to show the percentage distribution of clients by number of diagnoses (0-3)."
+        }
+      ]
+    }
+  ];
 
-Then, by merging these subsets through a full-join operation, we
-constructed a comprehensive dataset named ‘state_treatment’ with three
-columns: ‘LST’, each treatment, and the count of each treatment. Each
-row in this dataset represents a state along with its corresponding
-treatment counts. Subsequently, we reshaped the ‘state_treatment’
-dataset into a longer format, creating a new dataset named
-“long_treatment”. Following column renaming and data cleansing
-procedures, the ‘long_treatment’ dataset now comprises three columns:
-“LST”, “treatments”, and “n”. This refined dataset offers a succinct
-overview of treatment frequencies across states. Using these data, we
-also plotted a circular bar graph for different states, showing the top
-10 treatment utilize in facilities in each states.
+  return (
+    <div className="max-w-4xl mx-auto p-6 space-y-6">
+      <h1 className="text-3xl font-bold text-gray-800 mb-8">Methodology</h1>
+      
+      {sections.map((section, idx) => (
+        <Card key={idx} className="shadow-lg">
+          <CardHeader>
+            <CardTitle className="text-2xl text-blue-700">{section.title}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {section.content.map((item, subIdx) => (
+              <div key={subIdx} className="mb-4">
+                <h3 className="text-lg font-semibold text-gray-700 mb-2">{item.subtitle}</h3>
+                <p className="text-gray-600 leading-relaxed">{item.details}</p >
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      ))}
+      
+      <div className="mt-8 p-4 bg-blue-50 rounded-lg">
+        <p className="text-sm text-gray-600 italic">
+          This methodology document outlines our approach to analyzing and visualizing mental health facility data across the United States, including data preprocessing, geographic mapping, and interactive visualization implementation.
+        </p >
+      </div>
+    </div>
+  );
+};
 
-Also, to look into the prevalence of different mental health diseases in
-different states, we focused on variables “MH1”, “MH2”, and “MH3”, which
-indicate the client’s first, second and third diagnosis respectively.
-The presence of second and third diagnoses signifies the existence of
-comorbidities.To compute the disease prevalence, we added up the
-occurence of MH1, MH2, and MH3, to compile all the diagnoses of
-different mental health diseases. To accomplish this goal, we decoded
-MH1, MH2, and MH3 and full-joined them by “LST” and “illness_type”.
-Then, we add up the count of MH1, MH2, MH3 correspondingly. Using these
-data, we plotted a circular bar graph for different states, showing the
-top 10 prevalence of mental health diseases in each state.
-
-Additionally, we create a mapping between state codes and their
-abbreviations. Following this, we generated a table of counts for mental
-health service facilities (state_counts_nmhss) and another table for
-mental health diagnoses (occurrences_df), which represent the counts of
-facilities and diagnoses per state, respectively. Here, the count of
-clients diagnosed with mental health issues was determined by coding
-individuals according to the variable ‘NUMMHS,’ which denotes the number
-of reported mental health diagnoses. This variable is categorical, with
-values ranging from “0” to “3” representing the absence of diagnosis or
-the presence of one, two, or three diagnoses, respectively. To
-distinguish clients with mental health diagnoses from those without, we
-recoded values “2” and “3” as “1.”
-
-Subsequently, we merged the two data frames utilizing the variable
-‘STATE’ as the join key. Then, as we prepared to create a map of the
-United States using the us_map function, we joined this map data with
-the merged data table (merged_data1). After cleaning up table column
-names, the updated output table (merged_data2) comprises columns listing
-the state names, the total number of facilities within each state, the
-count of clients diagnosed with at least one disorder, and the facility
-burden. The facility burden is computed by dividing the number of
-clients diagnosed with at least one disorder by the total number of
-mental health facilities in each state.
-
-Regarding data visualization, using the resulting data frame (new), we
-utilized the ‘leaflet’ package to generate an interactive choropleth
-illustrating the distribution of clients with mental disorders, the
-number of facilities, and the facility burden across different states in
-the US. Furthermore, we developed an interactive dashboard with three
-circular bar charts, to present, respectively, the types of facilities
-utilized in each state, the top treatment methods employed in each state
-using an interactive bar chart, and the top mental health diagnoses
-prevalent in each state. Also, to visualize the distribution of clients
-based on the number of mental health diagnoses, we utilized the ‘plotly’
-package to depict the percentage of clients with zero, one, two, and
-three diagnoses.
+export default MethodologyDoc;
 
 ### Leaflet nationwide interactive choropleth
 

@@ -1,4 +1,4 @@
-# Mental-health-diagnoses-and-facility-burden-in-the-US
+<img width="1552" alt="Screen Shot 2025-01-08 at 11 05 46" src="https://github.com/user-attachments/assets/81f2b5ac-7ffc-4282-9d80-26da074966a0" /># Mental-health-diagnoses-and-facility-burden-in-the-US
 # Executive summary
 
 
@@ -159,7 +159,8 @@ three diagnoses.
 
 ### Leaflet nationwide interactive choropleth
 
-![](README-1--copy_files/figure-commonmark/unnamed-chunk-1-1.png)
+![](README-1--copy_files/figure-commonmark/unnamed-chunk-1-1.png) ![Uploading Screen Shot 2025-01-08 at 11.06.18.png…]()
+
 
 ## Interactive circular bar chart in dashboard
 

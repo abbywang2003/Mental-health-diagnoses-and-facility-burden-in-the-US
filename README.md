@@ -125,7 +125,7 @@ graph TD
 ### 1. National Distribution Map 🗺️
 
 <div align="center">
-<img width="1031" alt="choropleth_map" src="https://github.com/user-attachments/assets/cf26fcbc-2909-4fd9-b649-772fc43f653b" />
+<img src="img/choropleth_map.png">
 <br>
 <b>US Mental Health Facilities Distribution</b>
 <br>
@@ -141,7 +141,7 @@ graph TD
 ### 2. State-Level Analysis Dashboard
 
 <div align="center">
-  <img width="1402" alt="dashboard_preview" src="https://github.com/user-attachments/assets/1a0ca866-cc84-4469-84a5-4d3e74488178" />
+  <img src="img/dashboard_preview.png">
 </div>
 
 ### 3. Detailed State Visualizations
@@ -149,21 +149,23 @@ graph TD
 <table>
 <tr>
 <td width="33%" align="center">
-  <img width="663" alt="facilities_chart" src="https://github.com/user-attachments/assets/f4b31069-b038-485a-8c0a-308c17030d9e" />
+<img src="img/facilities_chart.png"
+  alt="facilities chart">
 <br>
 <b>Facilities Distribution</b>
 <br>
 <em>Circular bar chart showing top 10 facility types</em>
 </td>
 <td width="33%" align="center">
-<img width="663" alt="treatments_chart" src="https://github.com/user-attachments/assets/98e45003-0005-451e-a300-488c5d449e79" />
+<img src="img/treatments_chart.png">
 <br>
 <b>Treatment Analysis</b>
 <br>
 <em>Popular treatments in selected state</em>
 </td>
 <td width="33%" align="center">
-<img width="663" alt="diagnosis_chart" src="https://github.com/user-attachments/assets/93a72596-dd1b-4233-a6b4-42afe496bbe6" />
+<img src="img/diagnosis_chart.png"
+  alt="Treatments Chart">
 <br>
 <b>Diagnosis Patterns</b>
 <br>

@@ -191,7 +191,7 @@ install.packages(c(
 ))
 
 # Clone this repository
-# git clone [your-repository-url]
+# git clone [https://github.com/abbywang2003/Mental-health-diagnoses-and-facility-burden-in-the-US]
 
 # Run the Shiny app
 shiny::runApp()

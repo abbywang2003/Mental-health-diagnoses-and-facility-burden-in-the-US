@@ -23,6 +23,82 @@ An interactive dashboard analyzing mental health facilities across the United St
 - 💊 Treatment availability
 - 🩺 Mental health diagnosis patterns
 
+
+## 📊 Dataset Description
+
+This project utilizes two primary datasets from 2020:
+
+### 1. Mental Health Client-Level Data (MHCLD 2020)
+
+#### Dataset Overview
+- **Observations**: 6,959,702 records
+- **Variables**: 7 core features
+- **Missing Data**: 0% (complete dataset)
+
+#### Key Variables
+| Variable | Type | Unique Values | Description |
+|----------|------|---------------|-------------|
+| CASEID | Numeric | 6,959,702 | Unique case identifier |
+| NUMMHS | Numeric | 4 | Number of mental health diagnoses |
+| MH1-3 | Numeric | 14 each | Mental health diagnoses (primary, secondary, tertiary) |
+| STATEFIP | Numeric | 49 | State identification code |
+| LST | Character | 49 | State abbreviations |
+| GENDER | Numeric | 3 | Sex of patient |
+| AGE | Numeric | 15 | Age categories |
+
+#### Mental Health Diagnosis Coding
+```
+0 = No mental health diagnoses
+1 = One diagnosis
+2 = Two diagnoses
+3 = Three diagnoses
+```
+
+### 2. National Mental Health Services Survey (NMHSS 2020)
+
+#### Dataset Overview
+- **Observations**: 12,275 facilities
+- **Variables**: 20 treatment features
+- **Missing Data**: 0% (complete dataset)
+
+#### Treatment Features
+All treatment variables are binary (Yes/No):
+
+| Treatment Type | Description |
+|---------------|-------------|
+| TREATPSYCHOTHRPY | Individual psychotherapy |
+| TREATFAMTHRPY | Couples/family therapy |
+| TREATGRPTHRPY | Group therapy |
+| TREATCOGTHRPY | Cognitive behavioral therapy |
+| TREATDIALTHRPY | Dialectical behavior therapy |
+| TREATCOGREM | Cognitive remediation therapy |
+| TREATBEHAVMOD | Behavior modification |
+| TREATDUALMHSA | Integrated dual disorders treatment |
+| TREATTRAUMATHRPY | Trauma therapy |
+| TREATACTVTYTHRPY | Activity therapy |
+| TREATELECTRO | Electroconvulsive therapy |
+| TREATTMS | Transcranial Magnetic Stimulation |
+| TREATKIT | Ketamine Infusion Therapy |
+| TREATEMDR | Eye Movement Desensitization and Reprocessing |
+| TREATTELEMEDINCE | Telemedicine/telehealth therapy |
+
+#### Facility Types
+```
+FACILITYTYPE (12 categories):
+1 = Psychiatric hospital
+2 = Inpatient psychiatric unit
+3 = Residential treatment center (children)
+4 = Residential treatment center (adults)
+...
+```
+
+### Data Quality
+- Complete data with no missing values
+- Standardized coding across states
+- Comprehensive treatment coverage
+- National representation (49 states)
+
+
 <details>
 <summary><h2>🔍 Methodology</h2></summary>
 

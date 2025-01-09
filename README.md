@@ -125,7 +125,7 @@ graph TD
 ### 1. National Distribution Map 🗺️
 
 <div align="center">
-< img src="images/choropleth_map.png" alt="Mental Health Facilities Map">
+< img src="img/choropleth_map.png" alt="Mental Health Facilities Map">
 <br>
 <b>US Mental Health Facilities Distribution</b>
 <br>
@@ -141,7 +141,7 @@ graph TD
 ### 2. State-Level Analysis Dashboard
 
 <div align="center">
-< img src="images/dashboard_preview.png" alt="Dashboard Preview">
+< img src="img/dashboard_preview.png" alt="Dashboard Preview">
 </div>
 
 ### 3. Detailed State Visualizations
@@ -149,21 +149,21 @@ graph TD
 <table>
 <tr>
 <td width="33%" align="center">
-< img src="images/facilities_chart.png" alt="Facilities Chart">
+< img src="img/facilities_chart.png" alt="Facilities Chart">
 <br>
 <b>Facilities Distribution</b>
 <br>
 <em>Circular bar chart showing top 10 facility types</em>
 </td>
 <td width="33%" align="center">
-< img src="images/treatments_chart.png" alt="Treatments Chart">
+< img src="img/treatments_chart.png" alt="Treatments Chart">
 <br>
 <b>Treatment Analysis</b>
 <br>
 <em>Popular treatments in selected state</em>
 </td>
 <td width="33%" align="center">
-< img src="images/diagnosis_chart.png" alt="Diagnosis Chart">
+< img src="img/diagnosis_chart.png" alt="Diagnosis Chart">
 <br>
 <b>Diagnosis Patterns</b>
 <br>
